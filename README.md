@@ -46,6 +46,19 @@
 - `ALLOWED_HOSTS` — см [документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts).
 - `DATABASE_NAME` — путь до базы данных, например: `schoolbase.sqlite3`
 
+## Использование модуля `schoolkid_diary_hack_utils.py`
+Для использования утилит корректировки данных в БД нужно импортировать модуль:
+
+`import project.schoolkid_diary_hack_utils as utils`
+
+Функция `def fix_marks(schoolkid_name: str) -> bool` принимает имя (имя фамилия) ученика. 
+В случае успешного выполнения все отметки 2 и 3 ученика будут исправлены на 5.
+
+Функция `def remove_chastisements(schoolkid_name: str) -> bool` в случае успешного выполнения удаляет все замечания учителей.
+
+Функция `def create_commendation(schoolkid_name: str, subject_name: str) -> Commendation | None` принимает имя (имя фамилию) ученика и название предмета.
+В случае успешного выполнения добавляет похвалу ученику по заданному предмету.
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org).

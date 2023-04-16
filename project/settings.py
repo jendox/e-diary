@@ -5,7 +5,7 @@ from environs import Env
 env = Env()
 env.read_env()
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', [])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['*'])
 
 SECRET_KEY = env.str('SECRET_KEY', 'REPLACE_ME')
 
