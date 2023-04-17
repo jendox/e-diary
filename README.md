@@ -49,7 +49,7 @@
 ## Использование модуля `schoolkid_diary_hack_utils.py`
 Для использования утилит корректировки данных в БД нужно импортировать модуль:
 
-`import project.schoolkid_diary_hack_utils as utils`
+`import schoolkid_diary_hack_utils as utils`
 
 Функция `def fix_marks(schoolkid_name: str) -> bool` принимает имя (имя фамилия) ученика. 
 В случае успешного выполнения все отметки 2 и 3 ученика будут исправлены на 5.
