@@ -1,40 +1,34 @@
 import random
 
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from datacenter.models import Schoolkid, Mark, Chastisement, Subject, Lesson, Commendation
 
 
-def fix_marks(schoolkid_name: str) -> bool:
+def get_schoolkid_by_name(schoolkid_name: str) -> Schoolkid | None:
+    schoolkid = None
     try:
         schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
-    except ObjectDoesNotExist:
+    except Schoolkid.DoesNotExist:
         print(f"ERROR: There is no schoolkid named '{schoolkid_name}'")
-        return False
-    except MultipleObjectsReturned:
+    except Schoolkid.MultipleObjectsReturned:
         print(f"ERROR: Found a lot of schoolkids named '{schoolkid_name}'")
-        return False
-    kid_marks = Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3])
-    for mark in kid_marks:
-        mark.points = 5
-        mark.save()
-    print(f"Good job! {schoolkid_name}'s marks successfully fixed!")
-    return True
+    finally:
+        return schoolkid
+
+
+def fix_marks(schoolkid_name: str) -> bool:
+    if schoolkid := get_schoolkid_by_name(schoolkid_name):
+        Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3]).update(points=5)
+        print(f"Good job! {schoolkid_name}'s marks successfully fixed!")
+        return True
+    return False
 
 
 def remove_chastisements(schoolkid_name: str) -> bool:
-    try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
-    except ObjectDoesNotExist:
-        print(f"ERROR: There is no schoolkid named '{schoolkid_name}'")
-        return False
-    except MultipleObjectsReturned:
-        print(f"ERROR: Found a lot of schoolkids named '{schoolkid_name}'")
-        return False
-    chastisements = Chastisement.objects.filter(schoolkid=schoolkid)
-    for chastisement in chastisements:
-        chastisement.delete()
-    print(f"Good job! {schoolkid_name}'s chastisements successfully removed!")
-    return True
+    if schoolkid := get_schoolkid_by_name(schoolkid_name):
+        Chastisement.objects.filter(schoolkid=schoolkid).delete()
+        print(f"Good job! {schoolkid_name}'s chastisements successfully removed!")
+        return True
+    return False
 
 
 def get_random_commendation_text() -> str:
@@ -73,31 +67,24 @@ def get_random_commendation_text() -> str:
 
 
 def create_commendation(schoolkid_name: str, subject_name: str) -> Commendation | None:
+    commendation = None
     try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
-    except ObjectDoesNotExist:
-        print(f"ERROR: There is no schoolkid named '{schoolkid_name}'")
-        return None
-    except MultipleObjectsReturned:
-        print(f"ERROR: Found a lot of schoolkids named '{schoolkid_name}'")
-        return None
-    try:
-        subject = Subject.objects.get(title=subject_name, year_of_study=schoolkid.year_of_study)
-    except ObjectDoesNotExist:
+        if schoolkid := get_schoolkid_by_name(schoolkid_name):
+            subject = Subject.objects.get(title=subject_name, year_of_study=schoolkid.year_of_study)
+            lesson = Lesson.objects.filter(
+                year_of_study=schoolkid.year_of_study,
+                group_letter=schoolkid.group_letter,
+                subject=subject
+            ).order_by('-date').first()
+            commendation = Commendation.objects.create(
+                text=get_random_commendation_text(),
+                created=lesson.date,
+                schoolkid=schoolkid,
+                subject=subject,
+                teacher=lesson.teacher
+            )
+            print(f"Good job! A commendation successfully added!")
+    except Subject.ObjectDoesNotExist:
         print(f"ERROR: There is no school subject named {subject_name}")
-        return None
-
-    lesson = Lesson.objects.filter(
-        year_of_study=schoolkid.year_of_study,
-        group_letter=schoolkid.group_letter,
-        subject=subject
-    ).order_by('-date').first()
-    commendation = Commendation.objects.create(
-        text=get_random_commendation_text(),
-        created=lesson.date,
-        schoolkid=schoolkid,
-        subject=subject,
-        teacher=lesson.teacher
-    )
-    print(f"Good job! A commendation successfully added!")
-    return commendation
+    finally:
+        return commendation
